@@ -13,7 +13,7 @@ calc_Q = function(X, Sigma2, Mu, Alpha, Z, delta) {
   
   ASU2 = Alpha * (Sigma2 + Mu^2) # [j, l] = alpha[j, l] * (Sigma2[j, l] + Mu[j, l]^2)
   
-  Q = rowSums(X^2 %*% ASU2) # start w/ sum_l E_(ql)[(x_i' b_l)^2]
+  Q = Matrix::rowSums(X^2 %*% ASU2) # start w/ sum_l E_(ql)[(x_i' b_l)^2]
   
   # now add 2 sum_l sum_{k>l} (x_i' b_l_post)(x_i' b_k_post)
   # maybe try to think of a more efficient way of doing this?
