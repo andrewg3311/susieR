@@ -53,7 +53,7 @@
 #'
 #' @export
 #'
-susie_logistic = function(X, Y, L=  10, prior_variance = 1, prior_weights = NULL, 
+susie_logistic = function(X, Y, L = min(10, ncol(X)), prior_variance = 1, prior_weights = NULL, 
                  intercept = TRUE, Z = NULL, estimate_prior_variance = FALSE,
                  s_init = NULL, coverage=0.95, min_abs_corr=0.5,
                  max_iter = 100, tol = 1e-3, verbose = FALSE, track_fit = FALSE) {
