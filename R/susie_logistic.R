@@ -122,6 +122,9 @@ susie_logistic = function(X, Y, L = min(10, ncol(X)), prior_variance = 1, prior_
     }
   }
   
+  beta_post = colSums(t(post_info$Alpha) * t(post_info$Mu))
+  lin_pred = (X %*% beta_post) + (Z %*% delta)
+  
   # change output format to match the GLM version's output
   int = NULL
   delta = post_info$delta
@@ -147,16 +150,9 @@ susie_logistic = function(X, Y, L = min(10, ncol(X)), prior_variance = 1, prior_
     s$intercept = int
   } else {
     s$intercept = 0
-    s$fitted = s$Xr
   }
 
   s$delta = delta
-  
-  beta_post = colSums(s$alpha * s$mu)
-  lin_pred = (X %*% beta_post) + s$intercept
-  if (s$delta != 0) {
-    lin_pred = lin_pred + (Z %*% delta)
-  }
   
   s$fitted = 1 / (1 + exp(-lin_pred))
 
