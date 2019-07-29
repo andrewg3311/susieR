@@ -1,10 +1,12 @@
 #' @title update each effect once
-#' @param X an n by p matrix of covariantes
-#' @param Y an n vector of data
+#' @param X an n by p matrix of regressor variables
+#' @param Y an n vector of response variable
 #' @param s a SuSiE fit
 #' @param estimate_prior_variance boolean indicating whether to estimate prior variance
-#' @param colSum of X^2
-update_each_effect <- function (X, Y, s, estimate_prior_variance=FALSE) {
+#'
+update_each_effect <- function (X, Y, s, estimate_prior_variance=FALSE,
+                                estimate_prior_method="optim") {
+  if(estimate_prior_variance==FALSE) estimate_prior_method="none"
 
   # Repeat for each effect to update
   L = nrow(s$alpha)
@@ -17,7 +19,7 @@ update_each_effect <- function (X, Y, s, estimate_prior_variance=FALSE) {
       R = Y - s$Xr
 
       res <- single_effect_regression(R,X,s$V[l],s$sigma2,s$pi,
-                                      estimate_prior_variance)
+                                      estimate_prior_method)
 
       # Update the variational estimate of the posterior mean.
       s$mu[l,] <- res$mu

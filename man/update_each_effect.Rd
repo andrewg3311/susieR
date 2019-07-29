@@ -4,18 +4,17 @@
 \alias{update_each_effect}
 \title{update each effect once}
 \usage{
-update_each_effect(X, Y, s, estimate_prior_variance = FALSE)
+update_each_effect(X, Y, s, estimate_prior_variance = FALSE,
+  estimate_prior_method = "optim")
 }
 \arguments{
-\item{X}{an n by p matrix of covariantes}
+\item{X}{an n by p matrix of regressor variables}
 
-\item{Y}{an n vector of data}
+\item{Y}{an n vector of response variable}
 
 \item{s}{a SuSiE fit}
 
 \item{estimate_prior_variance}{boolean indicating whether to estimate prior variance}
-
-\item{colSum}{of X^2}
 }
 \description{
 update each effect once
