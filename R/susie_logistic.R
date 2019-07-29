@@ -10,6 +10,10 @@
 #' @param L maximum number of non-zero effects
 #' @param prior_variance the prior variance (vector of length L, or scalar. In latter case gets repeated L times). The prior variance on each non-zero element of b is set to be prior_variance.
 #' @param prior_weights a p vector of prior probability that each element is non-zero
+#' @param standardize logical flag (default=TRUE) for whether to standardize columns of X to unit variance prior to fitting.
+#' Note that `prior_variance` specifies the prior on the coefficients of X *after* standardization (if performed).
+#' If you do not standardize you may need
+#' to think more carefully about specifying
 #' @param intercept Should intercept be fitted (default=TRUE) or set to zero (FALSE). The latter is generally not recommended.
 #' @param Z an n by q vector of covariates to include in the model (e.g. top 10 PCs, gender, etc). The estimated effects
 #' for these covarites are not penalized, and there is no prior on the effects, the algorithm simply maximizes the ELBO w.r.t. the effects.
@@ -54,17 +58,23 @@
 #' @export
 #'
 susie_logistic = function(X, Y, L = min(10, ncol(X)), prior_variance = 1, prior_weights = NULL, 
-                 intercept = TRUE, Z = NULL, estimate_prior_variance = FALSE,
+                 standardize = TRUE, intercept = TRUE, Z = NULL, estimate_prior_variance = FALSE,
                  s_init = NULL, coverage=0.95, min_abs_corr=0.5,
                  max_iter = 100, tol = 1e-3, verbose = FALSE, track_fit = FALSE) {
   
   
   # Check input X.
-  if (!(is.double(X) & is.matrix(X)) & !inherits(X,"CsparseMatrix"))
+  if (!(is.double(X) & is.matrix(X)) & !inherits(X,"CsparseMatrix")) {
     stop("Input X must be a double-precision matrix, or a sparse matrix.")
-  
+  }
   p = ncol(X)
   n = nrow(X)
+  if (is.null(prior_weights)) {
+    prior_weights = rep(1 / p, p)
+  }
+  
+  X = safe_colScale(X, center = FALSE, scale = standardize) # in logistic case, no need to center (intercept handled differently)
+  
   
   # Check Z
   if (is.null(Z)) {
