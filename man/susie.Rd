@@ -2,87 +2,166 @@
 % Please edit documentation in R/susie.R
 \name{susie}
 \alias{susie}
-\title{SUm of Single Effect (SuSiE) Regression of Y on X}
+\title{SUm of Single Effects (SuSiE) Regression}
 \usage{
-susie(X, Y, L = 10, scaled_prior_variance = 0.2,
+susie(X, Y, L = min(10, ncol(X)), scaled_prior_variance = 0.2,
   residual_variance = NULL, prior_weights = NULL, null_weight = NULL,
   standardize = TRUE, intercept = TRUE,
-  estimate_residual_variance = TRUE, estimate_prior_variance = FALSE,
-  s_init = NULL, coverage = 0.95, min_abs_corr = 0.5,
+  estimate_residual_variance = TRUE, estimate_prior_variance = TRUE,
+  estimate_prior_method = c("optim", "EM"), s_init = NULL,
+  coverage = 0.95, min_abs_corr = 0.5,
   compute_univariate_zscore = FALSE, max_iter = 100, tol = 0.001,
   verbose = FALSE, track_fit = FALSE)
 }
 \arguments{
-\item{X}{an n by p matrix of covariates}
+\item{X}{An n by p matrix of covariates.}
 
-\item{Y}{an n vector}
+\item{Y}{A vector of length n.}
 
-\item{L}{maximum number of non-zero effects}
+\item{L}{Number of components (nonzero elements) in the SuSiE
+regression model. If \code{L} is larger than the number of
+covariate (p), \code{L} is set to p.}
 
-\item{scaled_prior_variance}{the scaled prior variance (vector of length L, or scalar. In latter case gets repeated L times). The prior variance on each non-zero element of b is set to be var(Y)*scaled_prior_variance.}
+\item{scaled_prior_variance}{The scaled prior variance. This is
+ either a scalar, or a vector of length \code{L}. The prior variance
+of each non-zero element of b is set to
+\code{var(Y)*scaled_prior_variance}. If
+\code{estimate_prior_variance = TRUE}, this input simply provides
+initial estimates of the prior variances.}
 
-\item{residual_variance}{the residual variance (defaults to variance of Y)}
+\item{residual_variance}{The variance of the residual. If
+\code{estimate_residual_variance = TRUE}, this value simply provides the
+initial estimate of the residual variance. By default, it is set to
+\code{var(Y)}.}
 
-\item{prior_weights}{a p vector of prior probability that each element is non-zero}
+\item{prior_weights}{A vector of length p, in which each entry
+gives the prior probability that corresponding column of X has a
+nonzero effect on the outcome, Y.}
 
-\item{null_weight}{probability of no effect, for each single effect model}
+\item{null_weight}{Prior probability of no effect (a number between
+0 and 1, and cannot be exactly 1).}
 
-\item{standardize}{logical flag (default=TRUE) for whether to standardize columns of X to unit variance prior to fitting.
-Note that `scaled_prior_variance` specifies the prior on the coefficients of X *after* standardization (if performed).
-If you do not standardize you may need
-to think more carefully about specifying
-`scaled_prior_variance`. Whatever the value of standardize, the coefficients (returned from `coef`) are for X on the original input scale.
-Any column of X that has zero variance is not standardized, but left as is.}
+\item{standardize}{If \code{standardize = TRUE}, standardize the
+columns of X to unit variance prior to fitting. Note that
+`scaled_prior_variance` specifies the prior on the coefficients of
+X \emph{after} standardization (if it is performed). If you do not
+standardize, you may need to think more carefully about specifying
+\code{scaled_prior_variance}. Whatever your choice, the
+coefficients returned by \code{coef} are given for \code{X} on the
+original input scale. Any column of \code{X} that has zero variance is
+not standardized, but left as is.}
 
-\item{intercept}{Should intercept be fitted (default=TRUE) or set to zero (FALSE). The latter is generally not recommended.}
+\item{intercept}{If \code{intercept = TRUE}, the intercept is
+fitted; otherwise, it is set to zero. Setting \code{intercept =
+FALSE} is generally not recommended.}
 
-\item{estimate_residual_variance}{indicates whether to estimate residual variance}
+\item{estimate_residual_variance}{If
+\code{estimate_residual_variance = TRUE}, the residual variance
+is estimated (using \code{residual_variance} as an initial  value).
+If \code{estimate_residual_variance = FALSE}
+then the residual variance is fixed to the value supplied by \code{residual_variance}.}
 
-\item{estimate_prior_variance}{indicates whether to estimate prior (currently not recommended as not fully tested and assessed)}
+\item{estimate_prior_variance}{If \code{estimate_prior_variance =
+TRUE}, the prior variance is estimated (a separate parameter for each of the \code{L}
+effects). If provided, \code{scaled_prior_variance} is then used as an initial
+point for the optimization. If \code{estimate_prior_variance = FALSE}
+then the prior variance (for each of the \code{L} effects) is determined by the value
+supplied to \code{scaled_prior_variance}.}
 
-\item{s_init}{a previous susie fit with which to initialize}
+\item{estimate_prior_method}{The method used for estimating prior
+variance.}
 
-\item{coverage}{coverage of confident sets. Default to 0.95 for 95\% credible interval.}
+\item{s_init}{A previous susie fit with which to initialize.}
 
-\item{min_abs_corr}{minimum of absolute value of correlation allowed in a credible set.
-Default set to 0.5 to correspond to squared correlation of 0.25,
-a commonly used threshold for genotype data in genetics studies.}
+\item{coverage}{A number between 0 and 1 specifying the coverage of
+the estimated confidence sets.}
 
-\item{compute_univariate_zscore}{if true, outputs z-score from per variable univariate regression}
+\item{min_abs_corr}{Minimum of absolute value of correlation
+allowed in a credible set. The default, 0.5, corresponds to squared
+correlation of 0.25, which is a commonly used threshold for
+genotype data in genetics studies.}
 
-\item{max_iter}{maximum number of iterations to perform}
+\item{compute_univariate_zscore}{If \code{compute_univariate_zscore
+= TRUE}, the univariate regression z-scores are outputted for each
+variable.}
 
-\item{tol}{convergence tolerance}
+\item{max_iter}{Maximum number of iterations of the IBSS fitting
+procedure.}
 
-\item{verbose}{if true outputs some progress messages}
+\item{tol}{A small, non-negative number specifying the convergence
+tolerance for the IBSS fitting procedure. The fitting procedure
+will halt when the difference in the variational lower bound, or
+"ELBO" (this is the objective function to be maximized), is less
+than \code{tol}.}
 
-\item{track_fit}{add an attribute \code{trace} to output that saves current values of all iterations}
+\item{verbose}{If \code{verbose = TRUE}, the algorithm's
+progress and a summary of the optimization settings are printed to
+the console.}
+
+\item{track_fit}{If \code{track_fit = TRUE}, an object \code{trace}
+is also returned containing detailed information about the
+estimates at each iteration of the IBSS fitting procedure.}
 }
 \value{
-a susie fit, which is a list with some or all of the following elements\cr
-\item{alpha}{an L by p matrix of posterior inclusion probabilites}
-\item{mu}{an L by p matrix of posterior means (conditional on inclusion)}
-\item{mu2}{an L by p matrix of posterior second moments (conditional on inclusion)}
-\item{Xr}{an n vector of fitted values, equal to X times colSums(alpha*mu))}
-\item{sigma2}{residual variance}
-\item{V}{prior variance}
-\item{elbo}{a vector of values of elbo achieved (objective function)}
-\item{sets}{a list of `cs`, `purity` and selected `cs_index`}
-\item{pip}{a vector of posterior inclusion probability}
-\item{z}{a vector of univariate z-scores}
+A \code{"susie"} object with some or all of the following
+  elements:
+
+\item{alpha}{An L by p matrix of posterior inclusion probabilites.}
+
+\item{mu}{An L by p matrix of posterior means, conditional on
+  inclusion.}
+
+\item{mu2}{An L by p matrix of posterior second moments,
+  conditional on inclusion.}
+
+\item{Xr}{An vector of length n, equal to \code{X \%*\% colSums(alpha
+  * mu)}.}
+
+\item{intercept}{The intercept (fixed or estimated).}
+
+\item{sigma2}{Residual variance (fixed or estimated).}
+
+\item{V}{Prior variance of the non-zero elements of b, equal to
+  \code{scaled_prior_variance * var(Y)}.}
+
+\item{elbo}{The value of the variational lower bound, or "ELBO"
+  (the objective function to be maximized), achieved at each
+  iteration of the IBSS fitting procedure.}
+
+\item{fitted}{Vector of length n containing the "fitted" values of
+  the outcome.}
+
+\item{sets}{Credible sets estimated from model fit; see
+  \code{\link{susie_get_cs}} for details.}
+
+\item{pip}{A vector of length p giving the (marginal) posterior
+  inclusion probabilities for all p covariates.}
+
+\item{z}{A vector of univariate z-scores.}
+
+\item{niter}{Number of IBSS iterations that were run.}
+
+\item{converged}{\code{TRUE} or \code{FALSE}, indicating whether
+  the IBSS converged to a solution within the chosen tolerance
+  level.}
 }
 \description{
-SUm of Single Effect (SuSiE) Regression of Y on X
-}
-\details{
-Performs Bayesian multiple linear regression of Y on X.
-That is, this function
-fits the regression model Y= sum_l Xb_l + e, where elements of e are iid N(0,residual_variance) and the
-sum_l b_l is a p vector of effects to be estimated.
-The assumption is that each b_l has exactly one non-zero element, with all elements
-equally likely to be non-zero. The prior on the non-zero element is N(0,var=var(Y)*scaled_prior_variance).
+Performs Bayesian multiple linear regression of Y on
+  X; that is, this function fits the regression model \eqn{Y = sum_l
+  Xb_l + e}, where elements of e are \emph{i.i.d.} normal with zero
+  mean and variance \code{residual_variance}, and \eqn{sum_l b_l} is
+  a vector of length p representing the effects to be estimated. The
+  SuSiE assumption is that each b_l has exactly one non-zero
+  element. The prior on the non-zero element is normal with zero mean
+  and variance \code{var(Y)*scaled_prior_variance}.
+
+  The model is fitted using the "Iterative Bayesian Stepwise
+  Selection" (IBSS) algorithm.
+
+  See also \code{susie_trendfilter} for applying susie to non-parametric regression, particularly changepoint problems
 }
 \examples{
+
 set.seed(1)
 n = 1000
 p = 1000
@@ -90,8 +169,14 @@ beta = rep(0,p)
 beta[1:4] = 1
 X = matrix(rnorm(n*p),nrow=n,ncol=p)
 y = X \%*\% beta + rnorm(n)
-res =susie(X,y,L=10)
+res = susie(X,y,L=10)
 coef(res)
 plot(y,predict(res))
 
+}
+\references{
+G. Wang, A. Sarkar, P. Carbonetto and M. Stephens (2018). A simple
+new approach to variable selection in regression, with application
+to genetic fine-mapping. \emph{bioRxiv}
+\url{https://doi.org/10.1101/501114}.
 }

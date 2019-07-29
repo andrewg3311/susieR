@@ -4,16 +4,19 @@
 \alias{update_each_effect_ss}
 \title{update each effect once}
 \usage{
-update_each_effect_ss(XtX, Xty, s_init, estimate_prior_variance = FALSE)
+update_each_effect_ss(XtX, Xty, s_init, estimate_prior_variance = FALSE,
+  estimate_prior_method = "optim")
 }
 \arguments{
-\item{XtX}{a p by p matrix, t(X)X}
+\item{XtX}{a p by p matrix, X'X}
 
 \item{Xty}{a p vector}
 
 \item{s_init}{a list with elements sigma2, V, alpha, mu, Xr}
 
 \item{estimate_prior_variance}{boolean indicating whether to estimate prior variance}
+
+\item{estimate_prior_method}{The method used for estimating prior variance, 'optim' or 'EM'}
 }
 \description{
 update each effect once

@@ -15,12 +15,11 @@ Eloglik = function(X,Y,s){
 
 # expected squared residuals
 get_ER2 = function(X,Y,s){
-  Xr = compute_MXt(s$alpha*s$mu, X)
-  Xrsum = colSums(Xr)
-
+  # Xr_L is L by N matrix
+  # s$Xr is column sum of Xr_L
+  Xr_L = compute_MXt(s$alpha*s$mu, X)
   postb2 = s$alpha * s$mu2 #posterior second moment
-
-  return(sum((Y-Xrsum)^2) - sum(Xr^2) + sum(attr(X, "d")*t(postb2)))
+  return(sum((Y-s$Xr)^2) - sum(Xr_L^2) + sum(attr(X, "d")*t(postb2)))
 }
 
 # @title posterior expected loglikelihood for a single effect regression
@@ -31,5 +30,5 @@ get_ER2 = function(X,Y,s){
 # @param Eb2 the posterior second moment of b (p vector) (alpha * mu2)
 SER_posterior_e_loglik = function(X,Y,s2,Eb,Eb2){
   n = nrow(X)
-  -0.5*n*log(2*pi*s2)  - (0.5/s2) * (sum(Y*Y) - 2*sum(Y*compute_Xb(X, Eb)) + sum(attr(X, "X2t")*as.vector(Eb2)))
+  return(-0.5*n*log(2*pi*s2)  - (0.5/s2) * (sum(Y*Y) - 2*sum(Y*compute_Xb(X, Eb)) + sum(attr(X,'d')*Eb2)))
 }

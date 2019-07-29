@@ -8,6 +8,7 @@ create_sparsity_mat = function(sparsity, n, p){
 }
 
 simulate = function(n=100, p=200, sparse=F) {
+  suppressWarnings(RNGversion("3.5.0"))
   set.seed(1)
   beta = rep(0,p)
   beta[1:4] = 10
@@ -28,23 +29,22 @@ simulate = function(n=100, p=200, sparse=F) {
            Xr=rep(5,n), KL=rep(1.2,L),
            sigma2=residual_variance,
       V=scaled_prior_variance * as.numeric(var(y)))
-  attach(list(X=X, X.sparse=X.sparse, s=s, y=y, n=n, p=p, b=beta),
-         warn.conflict=F)
+  return(list(X=X, X.sparse=X.sparse, s=s, y=y, n=n, p=p, b=beta))
 }
 
 simulate_tf = function(order){
+  suppressWarnings(RNGversion("3.5.0"))
+  set.seed(2)
   n = 50
   D = diag(-1, n)
   for (i in 1:(n-1)){
     D[i, i+1] = 1
   }
   if (order==0) {
-    set.seed(1)
     beta = c(rep(0,5),rep(1,5),rep(3,5),rep(-2,5),rep(0,30))
     y = beta + rnorm(n)
     X = solve(D)
   } else if (order==1) {
-    set.seed(1)
     beta = numeric(n)
     for (i in 1:n){
       if (i <= 5){
@@ -58,7 +58,6 @@ simulate_tf = function(order){
     y = beta + rnorm(n)
     X = solve(D%*%D)
   } else if (order==2) {
-    set.seed(1)
     beta = numeric(n)
     for (i in 1:n){
       if (i <= 5){
@@ -72,16 +71,10 @@ simulate_tf = function(order){
     y = beta + rnorm(n)
     X = solve(D%*%D%*%D)
   }
-  attach(list(X=X, y=y),
-         warn.conflict=F)
+  return(list(X=X, y=y))
 }
 
 expect_equal_susie_update = function(new.res, original.res){
-  new.res$alpha = as.matrix(new.res$alpha, p, 1)
-  new.res$mu = as.matrix(new.res$mu, p, 1)
-  new.res$mu2 = as.matrix(new.res$mu2, p, 1)
-  new.res$Xr = as.matrix(new.res$Xr, n, 1)
-
   expect_equal(new.res$alpha, original.res$alpha)
   expect_equal(new.res$mu, original.res$mu)
   expect_equal(new.res$mu2, original.res$mu2)
@@ -92,11 +85,6 @@ expect_equal_susie_update = function(new.res, original.res){
 }
 
 expect_equal_susie_ss_update = function(new.res, original.res){
-  new.res$alpha = as.matrix(new.res$alpha, p, 1)
-  new.res$mu = as.matrix(new.res$mu, p, 1)
-  new.res$mu2 = as.matrix(new.res$mu2, p, 1)
-  new.res$XtXr = as.matrix(new.res$XtXr, p, 1)
-
   expect_equal(new.res$alpha, original.res$alpha)
   expect_equal(new.res$mu, original.res$mu)
   expect_equal(new.res$mu2, original.res$mu2)
@@ -107,11 +95,6 @@ expect_equal_susie_ss_update = function(new.res, original.res){
 }
 
 expect_equal_SER = function(new.res, original.res){
-  new.res$alpha = as.matrix(new.res$alpha, p, 1)
-  new.res$mu = as.matrix(new.res$mu, p, 1)
-  new.res$mu2 = as.matrix(new.res$mu2, p, 1)
-  new.res$lbf = as.matrix(new.res$lbf, p, 1)
-
   expect_equal(new.res$alpha, original.res$alpha)
   expect_equal(new.res$mu, original.res$mu)
   expect_equal(new.res$mu2, original.res$mu2)
@@ -121,11 +104,6 @@ expect_equal_SER = function(new.res, original.res){
 }
 
 expect_equal_SER_ss = function(new.res, original.res){
-  new.res$alpha = as.matrix(new.res$alpha, p, 1)
-  new.res$mu = as.matrix(new.res$mu, p, 1)
-  new.res$mu2 = as.matrix(new.res$mu2, p, 1)
-  new.res$lbf = as.matrix(new.res$lbf, p, 1)
-
   expect_equal(new.res$alpha, original.res$alpha)
   expect_equal(new.res$mu, original.res$mu)
   expect_equal(new.res$mu2, original.res$mu2)
@@ -136,7 +114,6 @@ expect_equal_SER_ss = function(new.res, original.res){
 
 expect_equal_susie = function(new.res, original.res){
   expect_equal_susie_update(new.res, original.res)
-  new.res$fitted = as.matrix(new.res$fitted, n, 1)
   expect_equal(new.res$elbo, original.res$elbo)
   expect_equal(new.res$niter, original.res$niter)
   expect_equal(new.res$intercept, original.res$intercept)
@@ -146,7 +123,6 @@ expect_equal_susie = function(new.res, original.res){
 
 expect_equal_susie_ss = function(new.res, original.res){
   expect_equal_susie_ss_update(new.res, original.res)
-  new.res$Xtfitted = as.matrix(new.res$Xtfitted, p, 1)
   expect_equal(new.res$elbo, original.res$elbo)
   expect_equal(new.res$niter, original.res$niter)
   expect_equal(new.res$intercept, original.res$intercept)

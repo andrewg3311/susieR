@@ -4,16 +4,16 @@
 \alias{get_objective_ss}
 \title{Get objective function from data and susie fit object.}
 \usage{
-get_objective_ss(XtX, Xty, s, var_y, n)
+get_objective_ss(XtX, Xty, s, yty, n)
 }
 \arguments{
 \item{XtX}{a p by p matrix, X'X}
 
-\item{Xty}{a p vector, X'Y,}
+\item{Xty}{a p vector, X'y,}
 
 \item{s}{a susie fit object}
 
-\item{var_y}{the (sample) variance of the vector Y}
+\item{yty}{a scaler, y'y, where y is centered to have mean 0}
 
 \item{n}{sample size}
 }
