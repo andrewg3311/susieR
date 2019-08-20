@@ -20,7 +20,7 @@
 #' Do not include a constant column for the intercept, this is handled separately.
 #' @param estimate_prior_variance indicates whether to estimate prior (initial estimate given by prior_variance. If prior_variance is
 #' a vector, then a different prior variance is estimated for each of the L effects)
-#' @param s_init a previous susie fit with which to initialize (NOT CURRENTLY IMPLEMENTD IN LOGISTIC VERSION)
+#' @param s_init a previous susie fit with which to initialize
 #' @param coverage coverage of confident sets. Default to 0.95 for 95\% credible interval.
 #' @param min_abs_corr minimum of absolute value of correlation allowed in a credible set.
 #' Default set to 0.5 to correspond to squared correlation of 0.25,
@@ -73,7 +73,7 @@ susie_logistic = function(X, Y, L = min(10, ncol(X)), prior_variance = 1, prior_
     prior_weights = rep(1 / p, p)
   }
   
-  X = safe_colScale(X, center = FALSE, scale = standardize) # in logistic case, no need to center (intercept handled differently)
+  X = set_X_attributes(X, center = FALSE, scale = standardize) # in logistic case, no need to center (intercept handled differently)
   
   
   # Check Z
@@ -95,19 +95,44 @@ susie_logistic = function(X, Y, L = min(10, ncol(X)), prior_variance = 1, prior_
     prior_weights = rep(1 / p, p)
   }
   
- 
-  # initialize: could think of something better
-  #delta = glm(Y ~ Z - 1, family = "binomial")$coef # initialize to regular GLM solution
-  if (all(Z == 0)) { # if no covariates and no intercept
-    delta = 0
-  } else {
-    delta = glm(as.numeric(Y) ~ Z - 1, family = "binomial")$coef # initialize to regular GLM solution w/ just Z (no X)
+  # WILL CLEAN THIS UP LATER, NEED TO BE MORE CAREFUL IN GENERAL
+  if (!is.null(s_init)) { # if starting from a previous fit, initialize there
+    
+    if (intercept) {
+      if (ncol(Z) == 1) {
+        delta = s_init$intercept
+      } else {
+        delta = cbind(s_init$intercept, s_init$delta)
+      }
+    } else {
+      if (identical(Z, matrix(0, nrow = n, ncol = 1))) {
+        delta = 0
+      } else {
+        delta = s_init$delta
+      }
+    }
+    
+    Alpha = t(s_init$alpha)
+    Mu = t(s_init$mu)
+    Sigma2 = t(s_init$mu2 - s_init$mu^2)
+    
+  } else { # initialize regularly
+    # initialize: could think of something better
+    #delta = glm(Y ~ Z - 1, family = "binomial")$coef # initialize to regular GLM solution
+    if (all(Z == 0)) { # if no covariates and no intercept
+      delta = 0
+    } else {
+      delta = glm(as.numeric(Y) ~ Z - 1, family = "binomial")$coef # initialize to regular GLM solution w/ just Z (no X)
+    }
+    Alpha = matrix(prior_weights, nrow = p, ncol = L)
+    #Alpha = t(MCMCpack::rdirichlet(L, prior_weights)) # alternate initialization method
+    Mu = matrix(0, nrow = p, ncol = L)
+    Sigma2 = matrix(prior_variance, nrow = p, ncol = L, byrow = T)
+    
   }
-  Alpha = matrix(prior_weights, nrow = p, ncol = L)
-  #Alpha = t(MCMCpack::rdirichlet(L, prior_weights)) # alternate initialization method
-  Mu = matrix(0, nrow = p, ncol = L)
-  Sigma2 = matrix(prior_variance, nrow = p, ncol = L, byrow = T)
+  
   xi = update_xi(X, Sigma2, Mu, Alpha, Z, delta)
+
   post_info = list(Sigma2 = Sigma2, Mu = Mu, Alpha = Alpha, delta = delta, xi = xi, V = prior_variance)
   
   beta_post = post_info$Alpha * post_info$Mu
