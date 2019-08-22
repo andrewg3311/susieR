@@ -102,7 +102,7 @@ susie_logistic = function(X, Y, L = min(10, ncol(X)), prior_variance = 1, prior_
       if (ncol(Z) == 1) {
         delta = s_init$intercept
       } else {
-        delta = cbind(s_init$intercept, s_init$delta)
+        delta = c(s_init$intercept, s_init$delta)
       }
     } else {
       if (identical(Z, matrix(0, nrow = n, ncol = 1))) {
