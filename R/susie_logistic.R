@@ -171,6 +171,11 @@ susie_logistic = function(X, Y, L = min(10, ncol(X)), prior_variance = 1, prior_
     delta = 0
   }
   
+  # make V a vector, if it's a scalar (needed to make CSs)
+  if (length(post_info$V) == 1) {
+    post_info$V = rep(post_info$V, L)
+  }
+  
   # change output to match linear version
   s = list(alpha = t(post_info$Alpha), mu = t(post_info$Mu), mu2 = t(post_info$Sigma2 + post_info$Mu^2),
            Xr = rep(NA, n), KL = rep(NA, L), lbf = rep(NA, L), sigma2 = NA, V = post_info$V, pi = prior_weights, null_index = 0)
@@ -194,7 +199,7 @@ susie_logistic = function(X, Y, L = min(10, ncol(X)), prior_variance = 1, prior_
   ## SuSiE CS and PIP
   if (!is.null(coverage) && !is.null(min_abs_corr)) {
     s$sets = susie_get_cs(s, coverage = coverage, X = X, min_abs_corr = min_abs_corr)
-    s$pip = susie_get_pip(s, s$sets$cs_index)
+    s$pip = susie_get_pip(s, prune_by_cs = FALSE)
   }
   return(s)
 }
