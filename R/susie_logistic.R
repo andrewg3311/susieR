@@ -74,6 +74,7 @@ susie_logistic = function(X, Y, L = min(10, ncol(X)), prior_variance = 1, prior_
   }
   
   X = set_X_attributes(X, center = FALSE, scale = standardize) # in logistic case, no need to center (intercept handled differently)
+  attr(X, "X2") = X^2 # store the matrix w/ all entries squared (compute once and store)
   
   
   # Check Z

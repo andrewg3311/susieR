@@ -13,7 +13,12 @@ calc_Q = function(X, Sigma2, Mu, Alpha, Z, delta) {
   
   ASU2 = Alpha * (Sigma2 + Mu^2) # [j, l] = alpha[j, l] * (Sigma2[j, l] + Mu[j, l]^2)
   
-  Q = Matrix::rowSums(X^2 %*% ASU2) # start w/ sum_l E_(ql)[(x_i' b_l)^2]
+  if (is.null(attr(X, "X2"))) { # if X^2 not stored in X
+    Q = Matrix::rowSums(X^2 %*% ASU2) # start w/ sum_l E_(ql)[(x_i' b_l)^2]
+  } else {
+    Q = Matrix::rowSums(attr(X, "X2") %*% ASU2)
+  }
+  
   
   # now add 2 sum_l sum_{k>l} (x_i' b_l_post)(x_i' b_k_post)
   # maybe try to think of a more efficient way of doing this?
@@ -74,7 +79,12 @@ update_b_l = function(X, Y, xi, prior_weights, V, Sigma2, Mu, Alpha, l, Z, delta
   g_xi_5_xi = ((g_xi - .5) / xi) # vector of (g(xi_i) - .5) / xi_i, pre-compute once
   g_xi_5_xi[xi == 0] = .25 # case of 0/0 (e.g. x_i is all 0), use L'Hopital
   
-  common_denoms = (1 / V) + (t(X^2) %*% g_xi_5_xi) # appears many times, compute once, posterior precisions
+  if (is.null(attr(X, "X2"))) { # if X^2 not stored
+    common_denoms = (1 / V) + (t(X^2) %*% g_xi_5_xi) # appears many times, compute once, posterior precisions
+  } else {
+    common_denoms = (1 / V) + (t(attr(X, "X2")) %*% g_xi_5_xi)
+  }
+  
   
   # update Alpha[, l]
   nums = t(X) %*% (Y - .5 -  (g_xi_5_xi * ((X %*% b_post_not_l) + (Z %*% delta)))) # numerator in exp
